@@ -1,12 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useCartStore } from './useCartStore'
 
 export default function MainSidenav() {
     const pathname = usePathname()
+    const router = useRouter()
     const [open, setOpen] = useState(false)
+    const items = useCartStore((state) => state.items)
+    const cartCount = items.length
 
     const links = [
         { label: 'Landing Page', href: '/' },
@@ -16,13 +20,28 @@ export default function MainSidenav() {
 
     return (
         <>
-            {/* Toggle Button */}
-            <button
-                onClick={() => setOpen(!open)}
-                className="fixed top-4 right-4 z-50 bg-white border p-2 rounded shadow"
-            >
-                ☰
-            </button>
+            {/* Toggle & Cart Buttons */}
+            <div className="fixed top-4 right-4 z-50 flex gap-2">
+                <div className="relative">
+                    <button
+                        onClick={() => router.push('/checkout')}
+                        className="bg-white border p-2 rounded shadow cursor-pointer"
+                    >
+                        🛒
+                    </button>
+                    {cartCount > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2">
+                            {cartCount}
+                        </span>
+                    )}
+                </div>
+                <button
+                    onClick={() => setOpen(!open)}
+                    className="bg-white border p-2 rounded shadow cursor-pointer"
+                >
+                    ☰
+                </button>
+            </div>
 
             {/* Sidebar */}
             <aside

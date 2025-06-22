@@ -2,20 +2,28 @@
 
 import { useCartStore } from "../../../lib/useCartStore"
 import Image from "next/image"
+import { useRouter } from 'next/navigation'
 
 export default function CheckoutPage() {
     const items = useCartStore((state) => state.items)
     const clearCart = useCartStore((state) => state.clearCart)
     const removeFromCart = useCartStore((state) => state.removeFromCart)
     const placeOrder = useCartStore((state) => state.placeOrder)
+    const router = useRouter()
 
     const orders = useCartStore((state) => state.orders)
     console.log('📦 Past Orders:', orders)
 
     if (items.length === 0) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-gray-500">
-                Your cart is empty 🛒
+            <div className="min-h-screen flex flex-col items-center justify-center text-gray-500 gap-4">
+                <p>
+                    Your cart is empty 🛒
+                </p>
+                <button
+                    onClick={() => router.push('/products')}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-semibold transition cursor-pointer"
+                >Add Product</button>
             </div>
         )
     }

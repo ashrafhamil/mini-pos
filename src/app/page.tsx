@@ -6,7 +6,7 @@ export default function Home() {
   const router = useRouter()
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-white">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 to-yellow-200">
       <div className="text-center space-y-6">
         <h1 className="text-4xl font-bold text-gray-800">Mini POS System</h1>
         <p className="text-gray-600 text-lg max-w-md mx-auto">
