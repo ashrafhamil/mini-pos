@@ -45,7 +45,7 @@ export default function CheckoutPage() {
                         <div className="flex items-start">
                             <button
                                 onClick={() => removeFromCart(item)}
-                                className="text-sm px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded"
+                                className="text-sm px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded cursor-pointer"
                             >
                                 Remove
                             </button>
@@ -65,7 +65,7 @@ export default function CheckoutPage() {
             <div className="mt-6 flex justify-end gap-4">
                 <button
                     onClick={clearCart}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium cursor-pointer"
                 >
                     Clear Cart
                 </button>
@@ -74,7 +74,7 @@ export default function CheckoutPage() {
                         placeOrder()
                         alert('✅ Order placed!')
                     }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium cursor-pointer"
                 >
                     Place Order
                 </button>

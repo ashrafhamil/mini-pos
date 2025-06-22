@@ -46,7 +46,7 @@ export default function ProductListingPage() {
                         <p className="text-blue-600 font-bold mt-1">RM {product.price.toFixed(2)}</p>
                         <button
                             onClick={() => router.push(`/products/${product.id}`)}
-                            className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
+                            className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium cursor-pointer"
                         >
                             View Details
                         </button>

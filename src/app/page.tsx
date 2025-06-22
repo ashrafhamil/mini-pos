@@ -14,7 +14,7 @@ export default function Home() {
         </p>
         <button
           onClick={() => router.push('/products')}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-semibold transition"
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-semibold transition cursor-pointer"
         >
           View Products
         </button>
