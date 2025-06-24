@@ -113,7 +113,7 @@ export default function ProductDetailPage() {
         }
 
         addToCart(item)
-        console.log('🛒 Cart after add:', useCartStore.getState().items)
+        // console.log('🛒 Cart after add:', useCartStore.getState().items)
         alert('Added to cart!')
     }
 

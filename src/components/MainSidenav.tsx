@@ -3,14 +3,13 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { useCartStore } from './useCartStore'
+import { useCartStore } from '../../lib/useCartStore'
 
 export default function MainSidenav() {
     const pathname = usePathname()
     const router = useRouter()
     const [open, setOpen] = useState(false)
-    const items = useCartStore((state) => state.items)
-    const cartCount = items.length
+    const cartCount = useCartStore((state) => state.items.length)
 
     const links = [
         { label: 'Landing Page', href: '/' },
