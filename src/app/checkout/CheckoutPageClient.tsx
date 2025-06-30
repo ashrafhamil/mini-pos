@@ -20,15 +20,19 @@ export default function CheckoutPageClient() {
         hasRun.current = true
 
         if (paymentStatus === 'success') {
-            placeOrder()
-            clearCart()
-            alert('✅ Payment successful. Order placed!')
+            if (items.length > 0) {
+                placeOrder()
+                clearCart()
+                alert('✅ Payment successful. Order placed!')
+            } else {
+                alert('⚠️ No items in cart to place order.')
+            }
             router.replace('/checkout')
         } else if (paymentStatus === 'failed') {
             alert('❌ Payment failed.')
             router.replace('/checkout')
         }
-    }, [paymentStatus, placeOrder, clearCart, router])
+    }, [paymentStatus, placeOrder, clearCart, router, items])
 
     if (items.length === 0) {
         return (

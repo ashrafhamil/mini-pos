@@ -1,149 +1,101 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCartStore } from '../../../../lib/useCartStore'
 import Image from 'next/image'
 
+type Variant = {
+    storage: string
+    color: string
+    setType: string
+    price: number
+}
 
-const mockProducts = [
-    {
-        id: '1',
-        name: 'iPhone 15 Pro',
-        basePrice: 4899,
-        image: '/mockup/duck.png',
-        description: 'Flagship Apple phone with A17 chip, USB-C, and ProMotion display.',
-        options: [
-            { label: '128GB', extra: 0 },
-            { label: '256GB', extra: 400 },
-            { label: '512GB', extra: 800 },
-        ],
-        colors: [
-            { label: 'Black', extra: 0, image: '/mockup/duck.png' },
-            { label: 'White', extra: 50, image: '/mockup/duck.png' },
-            { label: 'Blue', extra: 100, image: '/mockup/duck.png' },
-        ],
-        purchaseOptions: [
-            { label: 'Phone Only', extra: 0 },
-            { label: 'Full Set', extra: 300 },
-        ],
-    },
-    {
-        id: '2',
-        name: 'Samsung Galaxy S24',
-        basePrice: 4299,
-        image: '/mockup/duck.png',
-        description: 'High-end Samsung phone with AI camera and Snapdragon Gen 3.',
-        options: [
-            { label: '128GB', extra: 0 },
-            { label: '256GB', extra: 400 },
-            { label: '512GB', extra: 800 },
-        ],
-        colors: [
-            { label: 'Black', extra: 0, image: '/mockup/duck.png' },
-            { label: 'White', extra: 50, image: '/mockup/duck.png' },
-            { label: 'Blue', extra: 100, image: '/mockup/duck.png' },
-        ],
-        purchaseOptions: [
-            { label: 'Phone Only', extra: 0 },
-            { label: 'Full Set', extra: 300 },
-        ],
-    },
-    {
-        id: '3',
-        name: 'Xiaomi 13T Pro',
-        basePrice: 2799,
-        image: '/mockup/duck.png',
-        description: 'Budget-friendly flagship with Leica camera and Dimensity 9200 chip.',
-        options: [
-            { label: '128GB', extra: 0 },
-            { label: '256GB', extra: 400 },
-            { label: '512GB', extra: 800 },
-        ],
-        colors: [
-            { label: 'Black', extra: 0, image: '/mockup/duck.png' },
-            { label: 'White', extra: 50, image: '/mockup/duck.png' },
-            { label: 'Blue', extra: 100, image: '/mockup/duck.png' },
-        ],
-        purchaseOptions: [
-            { label: 'Phone Only', extra: 0 },
-            { label: 'Full Set', extra: 300 },
-        ],
-    },
-]
+type Product = {
+    id: string
+    name: string
+    image: string
+    variants: Variant[]
+}
 
 export default function ProductDetailPage() {
     const { id } = useParams()
-    const product = mockProducts.find((p) => p.id === id)
-
-    // Provide fallback values even if product is undefined (to satisfy React hooks)
-    const [selectedStorage, setSelectedStorage] = useState(
-        product?.options[0].label ?? ''
-    )
-    const [selectedColor, setSelectedColor] = useState(
-        product?.colors[0].label ?? ''
-    )
-    const [selectedPurchaseType, setSelectedPurchaseType] = useState(
-        product?.purchaseOptions[0].label ?? ''
-    )
-
     const addToCart = useCartStore((state) => state.addToCart)
 
-    if (!product) {
-        return <div className="p-6 text-center text-red-600">Product not found.</div>
-    }
+    const [product, setProduct] = useState<Product | null>(null)
+    const [selectedStorage, setSelectedStorage] = useState('')
+    const [selectedColor, setSelectedColor] = useState('')
+    const [selectedSetType, setSelectedSetType] = useState('')
 
-    const calculateTotal = () => {
-        const storageExtra = product.options.find((o) => o.label === selectedStorage)?.extra || 0
-        const colorExtra = product.colors.find((c) => c.label === selectedColor)?.extra || 0
-        const purchaseExtra = product.purchaseOptions.find((p) => p.label === selectedPurchaseType)?.extra || 0
+    useEffect(() => {
+        const stored = localStorage.getItem('products')
+        if (!stored) return
 
-        return product.basePrice + storageExtra + colorExtra + purchaseExtra
-    }
+        const products = JSON.parse(stored)
+        const found = products.find((p: any) => p.id === id)
+
+        if (found) {
+            setProduct(found)
+            setSelectedStorage(found.variants[0]?.storage || '')
+            setSelectedColor(found.variants[0]?.color || '')
+            setSelectedSetType(found.variants[0]?.setType || '')
+        }
+    }, [id])
+
+    if (!product) return <div className="p-6 text-center text-red-600">Product not found.</div>
+
+    const matchedVariant = product.variants.find(
+        (v: any) =>
+            v.storage === selectedStorage &&
+            v.color === selectedColor &&
+            v.setType === selectedSetType
+    )
+
+    const price = matchedVariant?.price ?? 0
 
     const handleAddToCart = () => {
+        if (!matchedVariant) return alert('❌ No matching variant.')
+
         const item = {
             id: product.id,
             name: product.name,
             storage: selectedStorage,
             color: selectedColor,
-            purchaseType: selectedPurchaseType,
-            price: calculateTotal(),
-            image: product.colors.find((c) => c.label === selectedColor)?.image || product.image,
+            purchaseType: selectedSetType,
+            price,
+            image: product.image,
         }
 
         addToCart(item)
-        // console.log('🛒 Cart after add:', useCartStore.getState().items)
-        alert('Added to cart!')
+        alert('✅ Added to cart!')
     }
+
+    const storages = [...new Set(product.variants.map(v => v.storage))].sort((a, b) => parseInt(a) - parseInt(b))
+    const colors = [...new Set(product.variants.map(v => v.color))].sort((a, b) => a.localeCompare(b))
+    const setTypes = [...new Set(product.variants.map(v => v.setType))].sort((a, b) => a.localeCompare(b))
 
 
     return (
         <div className="min-h-screen bg-white px-4 py-10 max-w-4xl mx-auto">
             <Image
-                src={product.colors.find((c) => c.label === selectedColor)?.image || product.image}
-                alt={`${product.name} - ${selectedColor}`}
+                src={product.image}
+                alt={product.name}
                 width={800}
                 height={400}
-                className="w-full rounded-lg object-cover h-64 transition duration-300"
-                priority
+                className="w-full rounded-lg object-cover h-64"
             />
 
             <div className="mt-6 space-y-4">
                 <h2 className="text-3xl font-bold text-gray-800">{product.name}</h2>
-                <p className="text-blue-600 text-xl font-semibold">RM {calculateTotal().toFixed(2)}</p>
-                <p className="text-gray-600">{product.description}</p>
+                <p className="text-blue-600 text-xl font-semibold">RM {price.toFixed(2)}</p>
 
                 <select
                     className="w-full border rounded px-3 py-2"
                     value={selectedStorage}
                     onChange={(e) => setSelectedStorage(e.target.value)}
                 >
-                    {product.options.map((opt) => (
-                        <option key={opt.label} value={opt.label}>
-                            {opt.label}
-                        </option>
-                    ))}
+                    {storages.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
 
                 <select
@@ -151,35 +103,24 @@ export default function ProductDetailPage() {
                     value={selectedColor}
                     onChange={(e) => setSelectedColor(e.target.value)}
                 >
-                    {product.colors.map((opt) => (
-                        <option key={opt.label} value={opt.label}>
-                            {opt.label}
-                        </option>
-                    ))}
+                    {colors.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
 
-                <div className="flex gap-4">
-                    {product.purchaseOptions.map((option) => (
-                        <label key={option.label} className="flex items-center gap-2 text-sm">
-                            <input
-                                type="radio"
-                                name="purchaseType"
-                                value={option.label}
-                                checked={selectedPurchaseType === option.label}
-                                onChange={() => setSelectedPurchaseType(option.label)}
-                                className="accent-blue-600"
-                            />
-                            {option.label}
-                        </label>
-                    ))}
-                </div>
-
+                <select
+                    className="w-full border rounded px-3 py-2"
+                    value={selectedSetType}
+                    onChange={(e) => setSelectedSetType(e.target.value)}
+                >
+                    {setTypes.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
 
                 <button
+                    disabled={!matchedVariant}
                     onClick={handleAddToCart}
-                    className="w-full mt-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded text-base font-bold transition cursor-pointer"
+                    className={`w-full mt-6 py-3 text-white rounded text-base font-bold cursor-pointer ${matchedVariant ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-300 cursor-not-allowed'
+                        }`}
                 >
-                    Add to Cart
+                    {matchedVariant ? 'Add to Cart' : 'Select a valid combination'}
                 </button>
             </div>
         </div>

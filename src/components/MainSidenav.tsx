@@ -15,6 +15,8 @@ export default function MainSidenav() {
         { label: 'Landing Page', href: '/' },
         { label: 'Products', href: '/products' },
         { label: 'Checkout', href: '/checkout' },
+        { label: 'Manage Products', href: '/admin/products' },
+        { label: 'Add Products', href: '/admin/products/add' },
     ]
 
     return (
