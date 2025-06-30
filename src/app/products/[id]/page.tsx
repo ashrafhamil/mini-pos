@@ -33,7 +33,7 @@ export default function ProductDetailPage() {
         if (!stored) return
 
         const products = JSON.parse(stored)
-        const found = products.find((p: any) => p.id === id)
+        const found = products.find((p: Product) => p.id === id)
 
         if (found) {
             setProduct(found)
@@ -46,7 +46,7 @@ export default function ProductDetailPage() {
     if (!product) return <div className="p-6 text-center text-red-600">Product not found.</div>
 
     const matchedVariant = product.variants.find(
-        (v: any) =>
+        (v: Variant) =>
             v.storage === selectedStorage &&
             v.color === selectedColor &&
             v.setType === selectedSetType
