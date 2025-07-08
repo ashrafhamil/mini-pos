@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { collection, addDoc } from 'firebase/firestore'
+import { db } from '../../../../../lib/firebase'
 
 type Variant = {
     storage: string
@@ -34,25 +36,15 @@ export default function ProductManagementPage() {
         setVariants(updated)
     }
 
-    const handleSubmit = () => {
-        const newProduct = {
-            id: Date.now().toString(), // unique ID
+    const handleSubmit = async () => {
+        await addDoc(collection(db, 'products'), {
             name: productName,
+            image: '/mockup/duck.png',
             variants,
-            image: '/mockup/duck.png', // for now
-        }
+        })
 
-        const existing = localStorage.getItem('products')
-        const products = existing ? JSON.parse(existing) : []
-
-        const updated = [...products, newProduct]
-        localStorage.setItem('products', JSON.stringify(updated))
-
-        alert('✅ Product saved to localStorage!')
-        setProductName('')
-        setVariants([{ storage: '', color: '', setType: '', price: 0 }])
+        alert('✅ Product saved to Firebase!')
     }
-
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-10">
