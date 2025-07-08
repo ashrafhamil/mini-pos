@@ -1,8 +1,9 @@
-// src/app/admin/products/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
+import { db } from '../../../../lib/firebase'
 
 type Variant = {
     storage: string
@@ -23,31 +24,41 @@ export default function ProductAdminView() {
     const router = useRouter()
 
     useEffect(() => {
-        const stored = localStorage.getItem('products')
-        if (stored) {
-            setProducts(JSON.parse(stored))
+        const fetchProducts = async () => {
+            const snapshot = await getDocs(collection(db, 'products'))
+            const data = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as Product[]
+
+            setProducts(data)
         }
+
+        fetchProducts()
     }, [])
 
-    const deleteProduct = (id: string) => {
-        const updated = products.filter(p => p.id !== id)
-        localStorage.setItem('products', JSON.stringify(updated))
-        setProducts(updated)
+    const deleteProduct = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this product?')) return
+
+        await deleteDoc(doc(db, 'products', id))
+        setProducts(prev => prev.filter(p => p.id !== id))
         alert('🗑️ Product deleted')
     }
 
-    const deleteVariant = (productId: string, index: number) => {
-        const updated = products.map(p => {
-            if (p.id === productId) {
-                return {
-                    ...p,
-                    variants: p.variants.filter((_, i) => i !== index),
-                }
-            }
-            return p
+    const deleteVariant = async (productId: string, index: number) => {
+        const product = products.find(p => p.id === productId)
+        if (!product) return
+
+        const updatedVariants = product.variants.filter((_, i) => i !== index)
+        await updateDoc(doc(db, 'products', productId), {
+            variants: updatedVariants,
         })
-        localStorage.setItem('products', JSON.stringify(updated))
-        setProducts(updated)
+
+        setProducts(prev =>
+            prev.map(p =>
+                p.id === productId ? { ...p, variants: updatedVariants } : p
+            )
+        )
         alert('🗑️ Variant deleted')
     }
 
@@ -95,7 +106,7 @@ export default function ProductAdminView() {
                                         <td className="px-2 py-1 border">
                                             <button
                                                 onClick={() => router.push(`/admin/products/${product.id}/edit`)}
-                                                className="text-red-600 text-xs hover:underline"
+                                                className="text-blue-600 text-xs hover:underline"
                                             >
                                                 Edit
                                             </button>

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { collection, getDocs } from 'firebase/firestore'
+import { db } from '../../../lib/firebase' // adjust path if different
 
 type Variant = {
     storage: string
@@ -23,11 +25,17 @@ export default function ProductListingPage() {
     const [products, setProducts] = useState<Product[]>([])
 
     useEffect(() => {
-        const stored = localStorage.getItem('products')
-        if (stored) {
-            const parsed = JSON.parse(stored)
-            setProducts(parsed)
+        const fetchProducts = async () => {
+            const snapshot = await getDocs(collection(db, 'products'))
+            const data = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as Product[]
+
+            setProducts(data)
         }
+
+        fetchProducts()
     }, [])
 
     return (
@@ -45,7 +53,6 @@ export default function ProductListingPage() {
                             className="rounded object-cover"
                         />
                         <h3 className="text-lg font-semibold mt-4 text-gray-700">{product.name}</h3>
-                        {/* <p className="text-sm text-gray-500">Variants: {product.variants?.length}</p> */}
                         <button
                             onClick={() => router.push(`/products/${product.id}`)}
                             className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium cursor-pointer"

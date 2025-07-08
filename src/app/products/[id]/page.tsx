@@ -3,6 +3,8 @@
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useCartStore } from '../../../../lib/useCartStore'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '../../../../lib/firebase'
 import Image from 'next/image'
 
 type Variant = {
@@ -29,24 +31,28 @@ export default function ProductDetailPage() {
     const [selectedSetType, setSelectedSetType] = useState('')
 
     useEffect(() => {
-        const stored = localStorage.getItem('products')
-        if (!stored) return
+        const fetchProduct = async () => {
+            if (!id) return
 
-        const products = JSON.parse(stored)
-        const found = products.find((p: Product) => p.id === id)
+            const docRef = doc(db, 'products', id as string)
+            const snapshot = await getDoc(docRef)
 
-        if (found) {
-            setProduct(found)
-            setSelectedStorage(found.variants[0]?.storage || '')
-            setSelectedColor(found.variants[0]?.color || '')
-            setSelectedSetType(found.variants[0]?.setType || '')
+            if (snapshot.exists()) {
+                const data = snapshot.data() as Product
+                setProduct(data)
+                setSelectedStorage(data.variants[0]?.storage || '')
+                setSelectedColor(data.variants[0]?.color || '')
+                setSelectedSetType(data.variants[0]?.setType || '')
+            }
         }
+
+        fetchProduct()
     }, [id])
 
     if (!product) return <div className="p-6 text-center text-red-600">Product not found.</div>
 
     const matchedVariant = product.variants.find(
-        (v: Variant) =>
+        (v) =>
             v.storage === selectedStorage &&
             v.color === selectedColor &&
             v.setType === selectedSetType
@@ -58,7 +64,7 @@ export default function ProductDetailPage() {
         if (!matchedVariant) return alert('❌ No matching variant.')
 
         const item = {
-            id: product.id,
+            id: id as string,
             name: product.name,
             storage: selectedStorage,
             color: selectedColor,
@@ -74,7 +80,6 @@ export default function ProductDetailPage() {
     const storages = [...new Set(product.variants.map(v => v.storage))].sort((a, b) => parseInt(a) - parseInt(b))
     const colors = [...new Set(product.variants.map(v => v.color))].sort((a, b) => a.localeCompare(b))
     const setTypes = [...new Set(product.variants.map(v => v.setType))].sort((a, b) => a.localeCompare(b))
-
 
     return (
         <div className="min-h-screen bg-white px-4 py-10 max-w-4xl mx-auto">
@@ -95,7 +100,9 @@ export default function ProductDetailPage() {
                     value={selectedStorage}
                     onChange={(e) => setSelectedStorage(e.target.value)}
                 >
-                    {storages.map(s => <option key={s} value={s}>{s}</option>)}
+                    {storages.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                    ))}
                 </select>
 
                 <select
@@ -103,7 +110,9 @@ export default function ProductDetailPage() {
                     value={selectedColor}
                     onChange={(e) => setSelectedColor(e.target.value)}
                 >
-                    {colors.map(s => <option key={s} value={s}>{s}</option>)}
+                    {colors.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                    ))}
                 </select>
 
                 <select
@@ -111,7 +120,9 @@ export default function ProductDetailPage() {
                     value={selectedSetType}
                     onChange={(e) => setSelectedSetType(e.target.value)}
                 >
-                    {setTypes.map(s => <option key={s} value={s}>{s}</option>)}
+                    {setTypes.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                    ))}
                 </select>
 
                 <button

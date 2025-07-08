@@ -2,6 +2,8 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { db } from '../../../../../../lib/firebase'
 
 type Variant = {
     storage: string
@@ -24,20 +26,27 @@ export default function EditProductPage() {
     const [variants, setVariants] = useState<Variant[]>([])
 
     useEffect(() => {
-        const products = JSON.parse(localStorage.getItem('products') || '[]')
-        const found = products.find((p: Product) => p.id === id)
-        if (found) {
-            setProductName(found.name)
-            setVariants(found.variants)
+        const fetchProduct = async () => {
+            if (!id) return
+            const ref = doc(db, 'products', id as string)
+            const snap = await getDoc(ref)
+            if (snap.exists()) {
+                const data = snap.data() as Product
+                setProductName(data.name)
+                setVariants(data.variants || [])
+            }
         }
+
+        fetchProduct()
     }, [id])
 
-    const saveChanges = () => {
-        const products = JSON.parse(localStorage.getItem('products') || '[]')
-        const updated = products.map((p: Product) =>
-            p.id === id ? { ...p, name: productName, variants } : p
-        )
-        localStorage.setItem('products', JSON.stringify(updated))
+    const saveChanges = async () => {
+        if (!id) return
+        const ref = doc(db, 'products', id as string)
+        await updateDoc(ref, {
+            name: productName,
+            variants,
+        })
         alert('✅ Product updated')
         router.push('/admin/products')
     }
@@ -58,7 +67,6 @@ export default function EditProductPage() {
     const removeVariant = (index: number) => {
         setVariants(variants.filter((_, i) => i !== index))
     }
-
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-10">
