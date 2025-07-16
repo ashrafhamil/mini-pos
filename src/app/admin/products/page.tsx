@@ -1,66 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
-import { db } from '../../../../lib/firebase'
-
-type Variant = {
-    storage: string
-    color: string
-    setType: string
-    price: number
-}
-
-type Product = {
-    id: string
-    name: string
-    image: string
-    variants: Variant[]
-}
+import { useProductStore } from '../../../../lib/useProductStore'
 
 export default function ProductAdminView() {
-    const [products, setProducts] = useState<Product[]>([])
+    const { products, loadProducts, deleteProduct, deleteVariant } = useProductStore()
     const router = useRouter()
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            const snapshot = await getDocs(collection(db, 'products'))
-            const data = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            })) as Product[]
-
-            setProducts(data)
-        }
-
-        fetchProducts()
+        if (products.length === 0) loadProducts()
     }, [])
-
-    const deleteProduct = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this product?')) return
-
-        await deleteDoc(doc(db, 'products', id))
-        setProducts(prev => prev.filter(p => p.id !== id))
-        alert('🗑️ Product deleted')
-    }
-
-    const deleteVariant = async (productId: string, index: number) => {
-        const product = products.find(p => p.id === productId)
-        if (!product) return
-
-        const updatedVariants = product.variants.filter((_, i) => i !== index)
-        await updateDoc(doc(db, 'products', productId), {
-            variants: updatedVariants,
-        })
-
-        setProducts(prev =>
-            prev.map(p =>
-                p.id === productId ? { ...p, variants: updatedVariants } : p
-            )
-        )
-        alert('🗑️ Variant deleted')
-    }
 
     if (products.length === 0) {
         return <div className="p-6 text-gray-500 text-center">No products found</div>
@@ -75,12 +25,27 @@ export default function ProductAdminView() {
                     <div className="flex justify-between items-center">
                         <h3 className="text-xl font-semibold text-gray-700">{product.name}</h3>
                         <button
-                            onClick={() => deleteProduct(product.id)}
+                            onClick={async () => {
+                                const confirmed = confirm('Are you sure?')
+                                if (confirmed) await deleteProduct(product.id)
+                            }}
                             className="text-sm text-red-600 hover:underline"
                         >
                             ❌ Delete Product
                         </button>
                     </div>
+
+                    {product.image ? (
+                        <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-32 h-32 object-contain border rounded"
+                        />
+                    ) : (
+                        <div className="w-32 h-32 flex items-center justify-center bg-gray-100 border rounded text-gray-400 text-sm">
+                            No image
+                        </div>
+                    )}
 
                     {product.variants.length === 0 ? (
                         <p className="text-sm text-gray-400">No variants</p>
@@ -105,7 +70,9 @@ export default function ProductAdminView() {
                                         <td className="px-2 py-1 border">RM {v.price.toFixed(2)}</td>
                                         <td className="px-2 py-1 border">
                                             <button
-                                                onClick={() => router.push(`/admin/products/${product.id}/edit`)}
+                                                onClick={() =>
+                                                    router.push(`/admin/products/${product.id}/edit`)
+                                                }
                                                 className="text-blue-600 text-xs hover:underline"
                                             >
                                                 Edit
@@ -113,7 +80,10 @@ export default function ProductAdminView() {
                                         </td>
                                         <td className="px-2 py-1 border">
                                             <button
-                                                onClick={() => deleteVariant(product.id, idx)}
+                                                onClick={async () => {
+                                                    const confirmed = confirm('Delete this variant?')
+                                                    if (confirmed) await deleteVariant(product.id, idx)
+                                                }}
                                                 className="text-red-600 text-xs hover:underline"
                                             >
                                                 Delete Variant

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-type CartItem = {
+export type CartItem = {
     id: string
     name: string
     storage: string
@@ -22,12 +22,15 @@ type CartState = {
 
 export const useCartStore = create<CartState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             items: [],
+            orders: [],
+
             addToCart: (item) =>
                 set((state) => ({
                     items: [...state.items, item],
                 })),
+
             removeFromCart: (target) =>
                 set((state) => ({
                     items: state.items.filter(
@@ -40,8 +43,9 @@ export const useCartStore = create<CartState>()(
                             )
                     ),
                 })),
+
             clearCart: () => set({ items: [] }),
-            orders: [],
+
             placeOrder: () =>
                 set((state) => ({
                     orders: [...state.orders, state.items],

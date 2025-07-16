@@ -84,11 +84,11 @@ export default function ProductDetailPage() {
     return (
         <div className="min-h-screen bg-white px-4 py-10 max-w-4xl mx-auto">
             <Image
-                src={product.image}
+                src={product.image || '/mockup/duck.png'}
                 alt={product.name}
                 width={800}
                 height={400}
-                className="w-full rounded-lg object-cover h-64"
+                className="w-full rounded-lg object-contain h-64"
             />
 
             <div className="mt-6 space-y-4">

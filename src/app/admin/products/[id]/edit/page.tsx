@@ -3,7 +3,8 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
-import { db } from '../../../../../../lib/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../../../../../../lib/firebase'
 
 type Variant = {
     storage: string
@@ -23,16 +24,19 @@ export default function EditProductPage() {
     const { id } = useParams()
     const router = useRouter()
     const [productName, setProductName] = useState('')
+    const [imageUrl, setImageUrl] = useState('')
+    const [newImageFile, setNewImageFile] = useState<File | null>(null)
     const [variants, setVariants] = useState<Variant[]>([])
 
     useEffect(() => {
         const fetchProduct = async () => {
             if (!id) return
-            const ref = doc(db, 'products', id as string)
-            const snap = await getDoc(ref)
+            const refDoc = doc(db, 'products', id as string)
+            const snap = await getDoc(refDoc)
             if (snap.exists()) {
                 const data = snap.data() as Product
                 setProductName(data.name)
+                setImageUrl(data.image || '')
                 setVariants(data.variants || [])
             }
         }
@@ -40,15 +44,11 @@ export default function EditProductPage() {
         fetchProduct()
     }, [id])
 
-    const saveChanges = async () => {
-        if (!id) return
-        const ref = doc(db, 'products', id as string)
-        await updateDoc(ref, {
-            name: productName,
-            variants,
-        })
-        alert('✅ Product updated')
-        router.push('/admin/products')
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files?.[0]) {
+            setNewImageFile(e.target.files[0])
+            setImageUrl(URL.createObjectURL(e.target.files[0]))
+        }
     }
 
     const handleVariantChange = (index: number, key: keyof Variant, value: string | number) => {
@@ -68,9 +68,46 @@ export default function EditProductPage() {
         setVariants(variants.filter((_, i) => i !== index))
     }
 
+    const saveChanges = async () => {
+        if (!id) return
+        const refDoc = doc(db, 'products', id as string)
+        let finalImageUrl = imageUrl
+
+        if (newImageFile) {
+            const imageId = crypto.randomUUID()
+            const imageRef = ref(storage, `product_images/${imageId}-${newImageFile.name}`)
+            await uploadBytes(imageRef, newImageFile)
+            finalImageUrl = await getDownloadURL(imageRef)
+        }
+
+        await updateDoc(refDoc, {
+            name: productName,
+            image: finalImageUrl,
+            variants,
+        })
+
+        alert('✅ Product updated')
+        router.push('/admin/products')
+    }
+
     return (
         <div className="max-w-4xl mx-auto px-4 py-10">
             <h2 className="text-2xl font-bold mb-6">Edit Product</h2>
+
+            {imageUrl && (
+                <img
+                    src={imageUrl}
+                    alt="Product Preview"
+                    className="mb-4 w-40 h-40 object-contain border rounded"
+                />
+            )}
+
+            <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="mb-6"
+            />
 
             <input
                 value={productName}
