@@ -17,16 +17,23 @@ type Variant = {
 export default function AddProductPage() {
     const router = useRouter()
     const [name, setName] = useState('')
+    const [desc, setDesc] = useState('')
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [variants, setVariants] = useState<Variant[]>([])
     const [loading, setLoading] = useState(false)
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files?.[0]) {
-            setImageFile(e.target.files[0])
-            setPreviewUrl(URL.createObjectURL(e.target.files[0]))
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (!file.type.startsWith('image/')) {
+            alert('❗ Please upload a valid image file.')
+            return
         }
+
+        setImageFile(file)
+        setPreviewUrl(URL.createObjectURL(file))
     }
 
     const handleVariantChange = (index: number, key: keyof Variant, value: string | number) => {
@@ -47,10 +54,10 @@ export default function AddProductPage() {
     }
 
     const saveProduct = async () => {
-        if (!name || !imageFile) {
-            alert('❗ Product name and image are required.')
-            return
-        }
+        if (!name || !desc || !imageFile) return alert('❗ Product name, description and image are required.')
+
+        const invalidVariants = variants.length === 0 || variants.some(v => !(v.storage && v.color && v.setType && v.price > 0))
+        if (invalidVariants) return alert('❗ Please fill out all variant fields correctly.')
 
         try {
             setLoading(true)
@@ -61,6 +68,7 @@ export default function AddProductPage() {
 
             await addDoc(collection(db, 'products'), {
                 name,
+                desc,
                 image: imageUrl,
                 variants,
             })
@@ -88,11 +96,29 @@ export default function AddProductPage() {
             />
 
             <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="mb-4"
+                type="text"
+                value={desc}
+                onChange={(e) => setDesc(e.target.value)}
+                className="w-full mb-4 border px-3 py-2 rounded"
+                placeholder="Product Description"
             />
+
+            <div className="mb-4">
+                <label
+                    htmlFor="product-image"
+                    className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded cursor-pointer hover:bg-indigo-700 transition"
+                >
+                    Upload Product Image
+                </label>
+                <input
+                    id="product-image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                />
+            </div>
+
 
             {previewUrl && (
                 <img
@@ -113,11 +139,12 @@ export default function AddProductPage() {
                             onChange={(e) => handleVariantChange(index, 'storage', e.target.value)}
                             className="border px-3 py-2 rounded"
                         >
-                            <option value="">Storage</option>
+                            <option value="" disabled>Storage</option>
                             <option value="64GB">64GB</option>
                             <option value="128GB">128GB</option>
                             <option value="256GB">256GB</option>
                             <option value="512GB">512GB</option>
+                            <option value="1TB">1TB</option>
                         </select>
 
                         <input
@@ -128,19 +155,41 @@ export default function AddProductPage() {
                             className="border px-3 py-2 rounded"
                         />
                         <datalist id={`color-options-${index}`}>
+                            <option value="(PRODUCT)RED" />
+                            <option value="Alpine Green" />
                             <option value="Black" />
-                            <option value="White" />
+                            <option value="Black Titanium" />
+                            <option value="Blue" />
+                            <option value="Blue Titanium" />
+                            <option value="Coral" />
+                            <option value="Deep Purple" />
+                            <option value="Gold" />
+                            <option value="Graphite" />
+                            <option value="Green" />
+                            <option value="Jet Black" />
+                            <option value="Midnight" />
+                            <option value="Natural Titanium" />
+                            <option value="Pacific Blue" />
                             <option value="Pink" />
-                            <option value="Orange" />
+                            <option value="Purple" />
                             <option value="Rose Gold" />
+                            <option value="Sierra Blue" />
+                            <option value="Silver" />
+                            <option value="Space Black" />
+                            <option value="Space Gray" />
+                            <option value="Starlight" />
+                            <option value="White" />
+                            <option value="White Titanium" />
+                            <option value="Yellow" />
                         </datalist>
+
 
                         <select
                             value={variant.setType}
                             onChange={(e) => handleVariantChange(index, 'setType', e.target.value)}
                             className="border px-3 py-2 rounded"
                         >
-                            <option value="">Set Type</option>
+                            <option value="" disabled>Set Type</option>
                             <option value="Phone Only">Phone Only</option>
                             <option value="Full Set">Full Set</option>
                         </select>
@@ -153,12 +202,15 @@ export default function AddProductPage() {
                             className="border px-3 py-2 rounded"
                         />
 
-                        <button
-                            onClick={() => removeVariant(index)}
-                            className="col-span-4 text-red-600 text-sm underline"
-                        >
-                            Remove
-                        </button>
+                        <div className="col-span-4 flex justify-end">
+                            <button
+                                onClick={() => removeVariant(index)}
+                                className="text-white text-xs bg-red-500 hover:bg-red-700 px-4 py-2 rounded"
+                            >
+                                Remove
+                            </button>
+                        </div>
+
                     </div>
                 ))}
             </div>

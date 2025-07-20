@@ -12,6 +12,7 @@ type Variant = {
 type Product = {
     id: string
     name: string
+    desc: string
     image: string
     variants: Variant[]
 }

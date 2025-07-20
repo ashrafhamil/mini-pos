@@ -17,6 +17,7 @@ type Variant = {
 type Product = {
     id: string
     name: string
+    desc: string
     image: string
     variants: Variant[]
 }
@@ -93,6 +94,7 @@ export default function ProductDetailPage() {
 
             <div className="mt-6 space-y-4">
                 <h2 className="text-3xl font-bold text-gray-800">{product.name}</h2>
+                <h2 className="text-sm text-gray-400">{product.desc}</h2>
                 <p className="text-blue-600 text-xl font-semibold">RM {price.toFixed(2)}</p>
 
                 <select

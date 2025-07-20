@@ -46,11 +46,14 @@ export default function ProductAdminView() {
                             No image
                         </div>
                     )}
+                    
+                    <h3 className="text-sm text-gray-400">{product.desc}</h3>
 
                     {product.variants.length === 0 ? (
                         <p className="text-sm text-gray-400">No variants</p>
                     ) : (
-                        <table className="w-full text-sm text-left border mt-2">
+                        <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm text-left border mt-2">
                             <thead>
                                 <tr className="bg-gray-100">
                                     <th className="px-2 py-1 border">Storage</th>
@@ -93,6 +96,7 @@ export default function ProductAdminView() {
                                 ))}
                             </tbody>
                         </table>
+                        </div>
                     )}
                 </div>
             ))}
